@@ -6,12 +6,25 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import student.ugal.eim_proiect_01.ui.theme.EIM_Proiect_01Theme
@@ -23,10 +36,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             EIM_Proiect_01Theme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    Greeting(
-//                        name = "Android",
-//                        modifier = Modifier.padding(innerPadding)
-//                    )
                     ObiecteScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
@@ -35,34 +44,21 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Composable
 fun ObiecteItem(o: Obiecte, modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(8.dp)) {
-       if(!o.esteKotlin)
-       {
-           Text(text = "Numar Long: ${o.numar}")
-           Text(text = "Numar Double: ${o.numarFloat}")
-           Text(text = "Caracter: ${o.caracter}")
-           Text(text = "Este Kotlin: ${o.esteKotlin}")
-           Text(text = "Brand: ${o.brand}")
-       }
-//           Text(text = "Numar Long: ${o.numar}")
-//        Text(text = "Numar Double: ${o.numarFloat}")
-//        Text(text = "Caracter: ${o.caracter}")
-//        Text(text = "Este Kotlin: ${o.esteKotlin}")
-//        Text(text = "Brand: ${o.brand}")
+        Text(text = "Numar Long: ${o.numar}")
+        Text(text = "Numar Double: ${o.numarFloat}")
+        Text(text = "Caracter: ${o.caracter}")
+        Text(text = "Este Kotlin: ${o.esteKotlin}")
+        Text(text = "Brand: ${o.brand} (Length: ${o.brand.length})")
     }
 }
 
 @Composable
 fun ObiecteScreen(modifier: Modifier = Modifier) {
+    var maxLengthInput by remember { mutableStateOf("") }
+    var selectedIsKotlin by remember { mutableStateOf(true) }
+
     val lista = listOf(
         Obiecte(2147483648L, 14E2, 'A', true, "Samsung"),
         Obiecte(12L, 3.14, 'B', false, "Apple"),
@@ -70,50 +66,56 @@ fun ObiecteScreen(modifier: Modifier = Modifier) {
         Obiecte(0L, 0.0, 'D', false, "Nothing"),
         Obiecte(7L, 2.718, 'E', true, "Google"),
         Obiecte(1L, 1.618, 'F', false, "OnePlus"),
+        Obiecte(100L, 2.0, 'G', true, "Sony"), // 4 letters, true
+        Obiecte(200L, 3.0, 'H', false, "Java"), // 4 letters, false
     )
+
+    val filteredLista = lista.filter { o ->
+        val lengthMatch = maxLengthInput.toIntOrNull()?.let { o.brand.length <= it } ?: true
+        val kotlinMatch = o.esteKotlin == selectedIsKotlin
+        lengthMatch && kotlinMatch
+    }
     
     Column(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier
+            .padding(16.dp)
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        lista.forEach { o ->
+        TextField(
+            value = maxLengthInput,
+            onValueChange = { newValue ->
+                if (newValue.all { it.isDigit() }) {
+                    maxLengthInput = newValue
+                }
+            },
+            label = { Text("Maximum Brand Length") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text("Is Kotlin:")
+            RadioButton(
+                selected = selectedIsKotlin,
+                onClick = { selectedIsKotlin = true }
+            )
+            Text("True")
+            RadioButton(
+                selected = !selectedIsKotlin,
+                onClick = { selectedIsKotlin = false }
+            )
+            Text("False")
+        }
+
+        filteredLista.forEach { o ->
             ObiecteItem(o)
         }
-    }
-}
-
-/*
-@Composable
-fun Point1(Numar: Long,NumarFloat:Float,Character:Char,isThisKotlin:Boolean,phoneBrands: Array<String>,modifier:Modifier=Modifier)
-{
-Text(
-text="Numar Long : $Numar",
-modifier = modifier
-)
-Text(
-text="Numar Float : $NumarFloat",
-modifier = modifier
-)
-Text(
-text="Character : $Character",
-modifier = modifier
-)
-Text(
-text="isThisKotlin : $isThisKotlin",
-modifier = modifier
-)
-Text(
-text="phoneBrands : $phoneBrands",
-modifier = modifier
-)
-}
-*/
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    EIM_Proiect_01Theme {
-        Greeting("Android")
     }
 }
 

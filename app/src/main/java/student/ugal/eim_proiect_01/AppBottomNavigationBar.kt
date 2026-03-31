@@ -1,6 +1,5 @@
 package student.ugal.eim_proiect_01
 
-import android.app.Activity
 import android.content.Intent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -35,7 +34,7 @@ fun AppBottomNavigationBar(currentScreen: NavigationScreen) {
             selected = currentScreen == NavigationScreen.RSS,
             onClick = {
                 if (currentScreen != NavigationScreen.RSS) {
-                    context.startActivity(Intent(context, RSSActivity::class.java))
+                    context.startActivity(Intent(context, FragmentDataReceiveAcitviity::class.java))
                 }
             },
             icon = { Icon(Icons.Default.Refresh, contentDescription = null) },

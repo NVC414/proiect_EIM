@@ -18,7 +18,7 @@
             android:name=".ThirdActivity"
             android:exported="false" />
         <activity
-            android:name=".RSSActivity"
+            android:name=".FragmentDataReceiveAcitviity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

@@ -31,8 +31,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import student.ugal.eim_proiect_01.ui.theme.EIM_Proiect_01Theme
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
@@ -73,7 +71,7 @@ fun StorageScreen(modifier: Modifier = Modifier) {
         OutlinedTextField(
             value = textInput,
             onValueChange = { textInput = it },
-            label = { Text("Introduceți text") },
+            label = { Text("Introduceți Cheia (Text)") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -92,22 +90,34 @@ fun StorageScreen(modifier: Modifier = Modifier) {
         ) {
             Button(
                 onClick = {
-                    val content = "$textInput | $floatValue"
-                    saveToInternal(context, internalFileName, content)
-                    textInput = ""
-                    floatValue = 0f
+                    val trimmedKey = textInput.trim()
+                    if (trimmedKey.isNotBlank()) {
+                        addEntry(context, internalFileName, trimmedKey, floatValue, isInternal = true)
+                        textInput = ""
+                        floatValue = 0f
+                        fileContent = readAll(context, internalFileName, isInternal = true)
+                    } else {
+                        Toast.makeText(context, "Introduceți o cheie validă", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Scrie Intern")
+                Text("Adaugă Intern")
             }
             Button(
                 onClick = {
-                    fileContent = readFromInternal(context, internalFileName)
+                    val trimmedKey = textInput.trim()
+                    if (trimmedKey.isNotBlank()) {
+                        removeEntry(context, internalFileName, trimmedKey, isInternal = true)
+                        textInput = ""
+                        fileContent = readAll(context, internalFileName, isInternal = true)
+                    } else {
+                        Toast.makeText(context, "Introduceți cheia de șters", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Citeste Intern")
+                Text("Șterge Intern")
             }
         }
 
@@ -117,78 +127,113 @@ fun StorageScreen(modifier: Modifier = Modifier) {
         ) {
             Button(
                 onClick = {
-                    val content = "$textInput | $floatValue"
-                    saveToExternal(context, externalFileName, content)
-                    textInput = ""
-                    floatValue = 0f
+                    val trimmedKey = textInput.trim()
+                    if (trimmedKey.isNotBlank()) {
+                        addEntry(context, externalFileName, trimmedKey, floatValue, isInternal = false)
+                        textInput = ""
+                        floatValue = 0f
+                        fileContent = readAll(context, externalFileName, isInternal = false)
+                    } else {
+                        Toast.makeText(context, "Introduceți o cheie validă", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Scrie Extern")
+                Text("Adaugă Extern")
             }
             Button(
                 onClick = {
-                    fileContent = readFromExternal(context, externalFileName)
+                    val trimmedKey = textInput.trim()
+                    if (trimmedKey.isNotBlank()) {
+                        removeEntry(context, externalFileName, trimmedKey, isInternal = false)
+                        textInput = ""
+                        fileContent = readAll(context, externalFileName, isInternal = false)
+                    } else {
+                        Toast.makeText(context, "Introduceți cheia de șters", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Citeste Extern")
+                Text("Șterge Extern")
             }
         }
 
+        Button(
+            onClick = {
+                val intContent = readAll(context, internalFileName, isInternal = true)
+                val extContent = readAll(context, externalFileName, isInternal = false)
+                fileContent = "--- Intern ---\n$intContent\n\n--- Extern ---\n$extContent"
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Vezi Tot Conținutul")
+        }
+
         if (fileContent.isNotEmpty()) {
-            Text(text = "Conținut fișier: $fileContent", modifier = Modifier.padding(top = 16.dp))
+            Text(text = fileContent, modifier = Modifier.padding(top = 16.dp))
         }
     }
 }
 
-fun saveToInternal(context: Context, fileName: String, content: String) {
-    try {
-        val fos: FileOutputStream = context.openFileOutput(fileName, Context.MODE_PRIVATE)
-        fos.write(content.toByteArray())
-        fos.close()
-        Toast.makeText(context, "Salvat intern", Toast.LENGTH_SHORT).show()
-    } catch (e: Exception) {
-        Toast.makeText(context, "Eroare salvare internă", Toast.LENGTH_SHORT).show()
+fun getFile(context: Context, fileName: String, isInternal: Boolean): File {
+    return if (isInternal) {
+        File(context.filesDir, fileName)
+    } else {
+        File(context.getExternalFilesDir(null), fileName)
     }
 }
 
-fun readFromInternal(context: Context, fileName: String): String {
-    return try {
-        val fis: FileInputStream = context.openFileInput(fileName)
-        val content = fis.bufferedReader().use { it.readText() }
-        fis.close()
-        content
-    } catch (e: Exception) {
-        "Eroare citire internă"
-    }
-}
-
-fun saveToExternal(context: Context, fileName: String, content: String) {
-    try {
-        val file = File(context.getExternalFilesDir(null), fileName)
-        val fos = FileOutputStream(file)
-        fos.write(content.toByteArray())
-        fos.close()
-        Toast.makeText(context, "Salvat extern", Toast.LENGTH_SHORT).show()
-    } catch (e: Exception) {
-        Toast.makeText(context, "Eroare salvare externă", Toast.LENGTH_SHORT).show()
-    }
-}
-
-fun readFromExternal(context: Context, fileName: String): String {
-    return try {
-        val file = File(context.getExternalFilesDir(null), fileName)
-        if (file.exists()) {
-            val fis = FileInputStream(file)
-            val content = fis.bufferedReader().use { it.readText() }
-            fis.close()
-            content
-        } else {
-            "Fișierul nu există"
+fun readAll(context: Context, fileName: String, isInternal: Boolean): String {
+    val file = getFile(context, fileName, isInternal)
+    return if (file.exists()) {
+        try {
+            file.readText()
+        } catch (e: Exception) {
+            "Eroare citire"
         }
+    } else {
+        ""
+    }
+}
+
+fun writeAll(context: Context, fileName: String, content: String, isInternal: Boolean) {
+    val file = getFile(context, fileName, isInternal)
+    try {
+        file.writeText(content)
     } catch (e: Exception) {
-        "Eroare citire externă"
+        Toast.makeText(context, "Eroare scriere", Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun addEntry(context: Context, fileName: String, key: String, value: Float, isInternal: Boolean) {
+    val trimmedKey = key.trim()
+    val currentContent = readAll(context, fileName, isInternal)
+    val lines = currentContent.lines().filter { it.isNotBlank() }.toMutableList()
+    
+    // Robust check: split by '|' and trim the key part to handle legacy data with spaces
+    lines.removeAll { it.substringBefore('|').trim() == trimmedKey }
+    
+    // Add new entry in standardized format
+    lines.add("$trimmedKey|$value")
+    
+    writeAll(context, fileName, lines.joinToString("\n"), isInternal)
+    Toast.makeText(context, "Adăugat cu succes", Toast.LENGTH_SHORT).show()
+}
+
+fun removeEntry(context: Context, fileName: String, key: String, isInternal: Boolean) {
+    val trimmedKey = key.trim()
+    val currentContent = readAll(context, fileName, isInternal)
+    val lines = currentContent.lines().filter { it.isNotBlank() }.toMutableList()
+    
+    val initialSize = lines.size
+    // Robust check: split by '|' and trim the key part
+    lines.removeAll { it.substringBefore('|').trim() == trimmedKey }
+    
+    if (lines.size < initialSize) {
+        writeAll(context, fileName, lines.joinToString("\n"), isInternal)
+        Toast.makeText(context, "Șters cu succes", Toast.LENGTH_SHORT).show()
+    } else {
+        Toast.makeText(context, "Cheia nu a fost găsită", Toast.LENGTH_SHORT).show()
     }
 }
 

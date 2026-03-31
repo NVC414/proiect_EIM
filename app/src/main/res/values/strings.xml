@@ -1,3 +1,9 @@
 <resources>
-    <string name="app_name">EIM_Proiect_01</string>
+    <string name="app_name" translatable="false">EIM_Proiect_01</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="next" translatable="false">Next</string>
+    <string name="previous" translatable="false">Previous</string>
+
+    <string name="int_name">Favorite food</string>
+    <string name="int_desc">Fish and Chips</string>
 </resources>

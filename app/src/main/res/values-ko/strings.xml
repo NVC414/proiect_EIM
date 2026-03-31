@@ -1,0 +1,4 @@
+<resources>
+    <string name="int_name">좋아하는 음식</string>
+    <string name="int_desc">김치</string>
+</resources>
